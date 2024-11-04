@@ -21,12 +21,12 @@ console.log("D&DBeyond DM Screen Starting");
 const linkUrlTarget = '.ddb-campaigns-character-card-footer-links-item-view';
 const campaignElementTarget = '.ddb-campaigns-detail-header-secondary';
 
-const rulesUrls = ["https://character-service.dndbeyond.com/character/v4/rule-data", "https://gamedata-service.dndbeyond.com/vehicles/v3/rule-data"];
-const charJSONurlBase = "https://character-service.dndbeyond.com/character/v4/character/";
+const rulesUrls = ["https://character-service.dndbeyond.com/character/v5/rule-data", "https://gamedata-service.dndbeyond.com/vehicles/v4/rule-data"];
+const charJSONurlBase = "https://character-service.dndbeyond.com/character/v5/character/";
 
 const stylesheetUrls = ["https://raw.githack.com/TeaWithLucas/DNDBeyond-DM-Screen/master/dm-screen.css"]
 
-const gameCollectionUrl = {prefix :"https://character-service.dndbeyond.com/character/v4/game-data/", postfix: "/collection"}
+const gameCollectionUrl = {prefix :"https://character-service.dndbeyond.com/character/v5/game-data/", postfix: "/collection"}
 const optionalRules = {
     "optionalOrigins": {category:"racial-trait", id:"racialTraitId" },
     "optionalClassFeatures": {category:"class-feature", id:"classFeatureId" },
@@ -158,6 +158,7 @@ var controlsHTML = `
 			      </div>
 		          <div class="gs-form-field gs-form-field-button gs-row-container">
 		             <button type="button" name="gs-currency-confirm" id="gs-currency-confirm">Amend</button>
+                     <button type="button" name="gs-export-data" id="gs-export-data" onclick="exportCharData()">Export</button> <!-- New button added -->
 			      </div>
                 </div>
               </div>
@@ -558,9 +559,125 @@ var initalModules = {
                 optionalOrigins: charf1.getOptionalOrigins(state),
             }
         }
+
+        function getMinCharData(state) {
+            /*
+                All parts of the following return are from http://media.dndbeyond.com/character-tools/characterTools.bundle.71970e5a4989d91edc1e.min.js, they are found in functions that have: '_mapStateToProps(state)' in the name, like function CharacterManagePane_mapStateToProps(state)
+                Any return that uses the function character_rules_engine_lib_es or character_rules_engine_web_adapter_es can be added to this for more return values as this list is not comprehensive.
+                Anything with selectors_appEnv is unnessisary,as it just returns values in state.appEnv.
+            */
+            console.log("Minified Data: Processing State Info Into Minified Data");
+
+            var ruleData = charf1.getRuleData(state);
+
+            function getSenseData(senses){ // finds returns the label
+                return Object.keys(senses).map(function(index) {
+                    let indexInt = parseInt(index);
+                    return {
+                        id: indexInt,
+                        key: charf2.getSenseTypeModifierKey(indexInt),
+                        name: charf2.getSenseTypeLabel(indexInt),
+                        distance: senses[indexInt]
+                    }
+                })
+            }
+
+            function getSpeedData(speeds){ // finds returns the label
+                let halfSpeed = roundDown(divide(speeds[Core[cmov].WALK],2));
+                return Object.keys(speeds).map(function(index) {
+                    let distance = speeds[index];
+                    if(Core[cmov].SWIM === index || Core[cmov].CLIMB === index){
+                        // swim speed is essentiall half walking speed rounded down if character doesn't have a set swim speed:
+                        // source https://www.dndbeyond.com/sources/basic-rules/adventuring#ClimbingSwimmingandCrawling
+                        distance = speeds[index] <= 0 ? halfSpeed : speeds[index];
+                    }
+                    return {
+                        id: charf2.getMovementTypeBySpeedMovementKey(index),
+                        key: index,
+                        name: charf2.getSpeedMovementKeyLabel(index, ruleData),
+                        distance: distance
+                    }
+                });
+            }
+
+            let charData = {
+                abilities: charf1.getAbilities(state), // not sure what the difference is between this and abilityLookup, seems to be one is a object, the other an array...
+                armorClass: charf1.getAcTotal(state),
+                attacks: charf1.getAttacks(state),
+                attacksPerActionInfo: charf1.getAttacksPerActionInfo(state),
+                conditions: charf1.getActiveConditions(state),
+                customItems: charf1.getCustomItems(state), //Here
+                customSkills: charf1.getCustomSkills(state),
+                creatures: charf1.getCreatures(state),
+                currencies: charf1.getCurrencies(state),
+                equipped: {
+                    armorItems: charf1.getEquippedArmorItems(state),
+                    weaponItems: charf1.getEquippedWeaponItems(state),
+                    gearItems: charf1.getEquippedGearItems(state)
+                },
+                feats: charf1.getBaseFeats(state),
+                hasInitiativeAdvantage: charf1.getHasInitiativeAdvantage(state),
+                hasMaxAttunedItems: charf1.hasMaxAttunedItems(state),
+                hasSpells: charf1.hasSpells(state),
+                hitPointInfo: charf1.getHitPointInfo(state),
+                immunities: charf1.getActiveGroupedImmunities(state),
+                initiative: charf1.getProcessedInitiative(state),
+                levelSpells: charf1.getLevelSpells(state),
+                name: charf1.getName(state),
+                passiveInsight: charf1.getPassiveInsight(state),
+                passiveInvestigation: charf1.getPassiveInvestigation(state),
+                passivePerception: charf1.getPassivePerception(state),
+                preferences: charf1.getCharacterPreferences(state),
+                resistances: charf1.getActiveGroupedResistances(state),
+                speeds: getSpeedData(charf1.getCurrentWeightSpeed(state)),
+                traits: charf1.getCharacterTraits(state),
+                unequipped: {
+                    armorItems: charf1.getUnequippedArmorItems(state),
+                    weaponItems: charf1.getUnequippedWeaponItems(state),
+                    gearItems: charf1.getUnequippedGearItems(state)
+                },
+                vulnerabilities: charf1.getActiveGroupedVulnerabilities(state),
+                totalClassLevel: charf1.getTotalClassLevel(state),
+                weaponSpellDamageGroups: charf1.getWeaponSpellDamageGroups(state),
+            };
+            
+            delete charData.node;
+            delete charData.state;
+            delete charData.type;
+            delete charData.url;
+
+            delete charData.abilities[0].entityTypeId;
+            delete charData.abilities[0].id;
+            delete charData.abilities[1].entityTypeId;
+            delete charData.abilities[1].id;
+            delete charData.abilities[2].entityTypeId;
+            delete charData.abilities[2].id;
+            delete charData.abilities[3].entityTypeId;
+            delete charData.abilities[3].id;
+            delete charData.abilities[4].entityTypeId;
+            delete charData.abilities[4].id;
+            delete charData.abilities[5].entityTypeId;
+            delete charData.abilities[5].id;
+
+            delete charData.activatables;
+
+            for(let i = 0; i < charData.attacks.length; i++){
+                delete charData.attacks[0].key;
+                delete charData.attacks[0].type;
+                delete charData.attacks[0].data.definition;
+                delete charData.attacks[0].data.originalContract;
+            }
+
+            console.log(`--------> CharData for ${charData.name} created`);
+            
+            return charData;
+
+        }
+
         window.moduleExport = {
             getCharData : getCharData,
             getAuthHeaders : getAuthHeaders,
+            getMinCharData: getMinCharData,
         }
         console.log("Module 2080: end");
     }
@@ -685,11 +802,11 @@ function retriveRules(charIDs) {
             });
             rulesData = {
                 ruleset : js[0].data,
-                vehiclesRuleset : js[1].data
+                // vehiclesRuleset : js[1].data
             }
             for(let id in charactersData){
                 charactersData[id].state.ruleData = rulesData.ruleset;
-                charactersData[id].state.serviceData.ruleDataPool = rulesData.vehiclesRuleset;
+                // charactersData[id].state.serviceData.ruleDataPool = rulesData.vehiclesRuleset;
             }
             console.debug("Rules Data:");
             console.debug(rulesData);
@@ -724,6 +841,132 @@ function updateAllCharData() {
     console.log("Updated All Char Data");
 }
 
+function safeStringify(obj, space = 2) {
+    const cache = new Set();
+    return JSON.stringify(obj, (key, value) => {
+      if (typeof value === "object" && value !== null) {
+        if (cache.has(value)) return; // Duplicate reference found, discard key
+        cache.add(value); // Store value in the cache
+      }
+      return value;
+    }, space);
+  }
+    
+// Define exportCharData with a retry mechanism to wait for characterData
+window.exportCharData = async function retryExportCharData(attempt = 0) {
+    const maxAttempts = 10; // Set a limit to retry attempts
+
+    if (!charactersData) {
+        if (attempt < maxAttempts) {
+            console.warn("characterData not yet available. Retrying...");
+            setTimeout(() => retryExportCharData(attempt + 1), 500); // Retry after 500ms
+        } else {
+            console.error("Failed to export: characterData is not available.");
+        }
+        return;
+    }
+
+    // Proceed with the export now that characterData is available
+    try {
+        for(let id in charactersData){
+            await getCharJSON(charactersData[id].url);
+        }
+    } catch (error) {
+        console.error("Error stringifying character data:", error);
+    }
+};
+
+// Expose the function to the global scope for userscripts
+if (typeof unsafeWindow !== "undefined") {
+    unsafeWindow.exportCharData = window.exportCharData;
+}
+
+console.log("exportCharData is defined and waiting for characterData.");
+
+async function getCharJSON(url) {
+    await getJSONfromURLs([url]).then((js) => {
+        js.forEach(function(charJSON, index){
+            if(isSuccessfulJSON(charJSON, index)){
+                let charId = charJSON.data.id;
+                charactersData[charId].state.character = charJSON.data;
+                let promises = retriveCharacterRules(charId)
+                Promise.all(promises).then(()=>{
+                    let charData = window.moduleExport.getMinCharData(charactersData[charId].state);
+                    processJSONStream(createJSONStream(charData)).then((parsedData) => {
+                        let characterDataString = safeStringify(parsedData);
+                        const blob = new Blob([characterDataString], { type: "application/json" });
+                        const urlBlob = URL.createObjectURL(blob);
+
+                        const a = document.createElement("a");
+                        a.href = urlBlob;
+                        a.download = charactersData[charId].data.name + ".json";
+                        document.body.appendChild(a);
+                        a.click();
+                        console.log(`Downloading Data for: ${charactersData[charId].data.name}`);
+                        
+
+                        URL.revokeObjectURL(urlBlob);
+                        document.body.removeChild(a);
+                    })
+                });
+            } else {
+                console.log("Char URL " + url + " was skipped");
+            }
+        });
+    }).catch((error) => {
+        console.log(error);
+        reject();
+    });
+}
+
+// Function to read chunks from the JSON stream and reassemble them
+async function processJSONStream(jsonStream) {
+    const reader = jsonStream.getReader();
+    let completeData = '';
+  
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break; // Exit when all chunks are read
+  
+      completeData += value; // Accumulate chunk data into one JSON string
+    }
+  
+    try {
+      // Parse the complete JSON string back into an object
+    //   const parsedData = JSON.parse(completeData);
+    //   console.log('JSON Data Parsed Successfully:', parsedData);
+      return completeData;
+    } catch (err) {
+      console.error('Error parsing JSON data:', err);
+    }
+  }
+  
+
+// Function to convert a large JSON object into a readable stream
+function createJSONStream(largeData) {
+    let jsonString = JSON.stringify(largeData); // Convert data to JSON string initially
+    const CHUNK_SIZE = 1024 * 1024; // Set chunk size to 1MB for example
+    
+    return new ReadableStream({
+      start(controller) {
+        let start = 0;
+        
+        while (start < jsonString.length) {
+          // Slice the JSON string into chunks
+          const chunk = jsonString.slice(start, start + CHUNK_SIZE);
+          controller.enqueue(chunk); // Send chunk to stream
+          start += CHUNK_SIZE;
+        }
+        
+        controller.close(); // Close the stream once all chunks are sent
+      },
+      cancel() {
+        console.log('Stream cancelled');
+      }
+    });
+  }
+  
+
 function updateCharData(url) {
 
     return new Promise(function (resolve, reject) {
@@ -741,7 +984,8 @@ function updateCharData(url) {
                         charactersData[charId].data = charData;
                         updateElementData(charactersData[charId]);
                         console.log("Retrived Char Data for char " + charId + " aka " + charactersData[charId].data.name);
-                        console.log(charactersData[charId]);
+                        let characterData = charactersData[charId];
+                        console.log(characterData);
                         resolve();
                     });
                 } else {
