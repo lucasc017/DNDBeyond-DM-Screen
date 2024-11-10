@@ -606,8 +606,6 @@ var initalModules = {
                 attacks: charf1.getAttacks(state),
                 attacksPerActionInfo: charf1.getAttacksPerActionInfo(state),
                 conditions: charf1.getActiveConditions(state),
-                customItems: charf1.getCustomItems(state), //Here
-                customSkills: charf1.getCustomSkills(state),
                 creatures: charf1.getCreatures(state),
                 currencies: charf1.getCurrencies(state),
                 equipped: {
@@ -638,7 +636,6 @@ var initalModules = {
                 },
                 vulnerabilities: charf1.getActiveGroupedVulnerabilities(state),
                 totalClassLevel: charf1.getTotalClassLevel(state),
-                weaponSpellDamageGroups: charf1.getWeaponSpellDamageGroups(state),
             };
             
             delete charData.node;
@@ -662,10 +659,122 @@ var initalModules = {
             delete charData.activatables;
 
             for(let i = 0; i < charData.attacks.length; i++){
-                delete charData.attacks[0].key;
-                delete charData.attacks[0].type;
-                delete charData.attacks[0].data.definition;
-                delete charData.attacks[0].data.originalContract;
+                delete charData.attacks[i].key;
+                delete charData.attacks[i].type;
+                delete charData.attacks[i].data.additionalDamages;
+                delete charData.attacks[i].data.definition;
+                delete charData.attacks[i].data.metaItems;
+                delete charData.attacks[i].data.modifiers;
+                delete charData.attacks[i].data.originalContract;
+                delete charData.attacks[i].data.properties;
+                delete charData.attacks[i].data.spells;
+
+            }
+
+            for(let i = 0; i < charData.creatures; i++){
+                delete charData.creatures[i].alignmentId;
+                delete charData.creatures[i].challengeInfo;
+                delete charData.creatures[i].definition;
+                delete charData.creatures[i].description;
+                delete charData.creatures[i].entityTypeId;
+                delete charData.creatures[i].environmentTags;
+                delete charData.creatures[i].flags;
+                delete charData.creatures[i].groupId;
+                charData.groupinfoName = charData.creatures[i].name;
+                delete charData.creatures[i].groupInfo;
+                delete charData.creatures[i].id;
+                delete charData.creatures[i].infusion;
+                delete charData.creatures[i].movementIds;
+                delete charData.creatures[i].notes;
+                delete charData.creatures[i].savingThrowLookup;
+                delete charData.creatures[i].savingThrows;
+                delete charData.creatures[i].sizeId;
+                delete charData.creatures[i].sizeInfo;
+                delete charData.creatures[i].entityTypeId;
+                delete charData.creatures[i].skillLookup;
+                delete charData.creatures[i].subTypeTags;
+                delete charData.creatures[i].subTypes;
+                delete charData.creatures[i].typeId;
+
+            }
+
+            for(let i  = 0; i < charData.equipped.armorItems.length; i++){
+                delete charData.equipped.armorItems[i].additionalDamages;
+                delete charData.equipped.armorItems[i].avatarUrl;
+                delete charData.equipped.armorItems[i].containerDefinitionKey;
+                delete charData.equipped.armorItems[i].containerEntityId;
+                delete charData.equipped.armorItems[i].containerEntityTypeId;
+                delete charData.equipped.armorItems[i].currency;
+                delete charData.equipped.armorItems[i].damage;
+                delete charData.equipped.armorItems[i].damageType;
+                delete charData.equipped.armorItems[i].definition;
+                delete charData.equipped.armorItems[i].definitionId;
+                delete charData.equipped.armorItems[i].definitionKey;
+                delete charData.equipped.armorItems[i].definitionTypeId;
+                delete charData.equipped.armorItems[i].entityTypeId;
+                delete charData.equipped.armorItems[i].equippedEntityId;
+                delete charData.equipped.armorItems[i].equippedEntityTypeId;
+                delete charData.equipped.armorItems[i].id;
+                delete charData.equipped.armorItems[i].metaItems;
+                delete charData.equipped.armorItems[i].notes;
+                delete charData.equipped.armorItems[i].properties;
+                delete charData.equipped.armorItems[i].weight;
+
+            }
+
+            for(let i  = 0; i < charData.equipped.gearItems.length; i++){
+                delete charData.equipped.gearItems[i].additionalDamages;
+                delete charData.equipped.gearItems[i].avatarUrl;
+                delete charData.equipped.gearItems[i].containerDefinitionKey;
+                delete charData.equipped.gearItems[i].containerEntityId;
+                delete charData.equipped.gearItems[i].containerEntityTypeId;
+                delete charData.equipped.gearItems[i].currency;
+                delete charData.equipped.gearItems[i].definition;
+                delete charData.equipped.gearItems[i].definitionId;
+                delete charData.equipped.gearItems[i].definitionKey;
+                delete charData.equipped.gearItems[i].definitionTypeId;
+                delete charData.equipped.gearItems[i].entityTypeId;
+                delete charData.equipped.gearItems[i].equippedEntityId;
+                delete charData.equipped.gearItems[i].equippedEntityTypeId;
+                delete charData.equipped.gearItems[i].id;
+                delete charData.equipped.gearItems[i].metaItems;
+                delete charData.equipped.gearItems[i].notes;
+                delete charData.equipped.gearItems[i].properties;
+                delete charData.equipped.gearItems[i].weight;
+
+            }
+
+            for(let i  = 0; i < charData.equipped.weaponItems.length; i++){
+                delete charData.equipped.weaponItems[i].additionalDamages;
+                delete charData.equipped.weaponItems[i].avatarUrl;
+                delete charData.equipped.weaponItems[i].containerDefinitionKey;
+                delete charData.equipped.weaponItems[i].containerEntityId;
+                delete charData.equipped.weaponItems[i].containerEntityTypeId;
+                delete charData.equipped.weaponItems[i].currency;
+                delete charData.equipped.weaponItems[i].definition;
+                delete charData.equipped.weaponItems[i].definitionId;
+                delete charData.equipped.weaponItems[i].definitionKey;
+                delete charData.equipped.weaponItems[i].definitionTypeId;
+                delete charData.equipped.weaponItems[i].entityTypeId;
+                delete charData.equipped.weaponItems[i].equippedEntityId;
+                delete charData.equipped.weaponItems[i].equippedEntityTypeId;
+                delete charData.equipped.weaponItems[i].id;
+                delete charData.equipped.weaponItems[i].metaItems;
+                delete charData.equipped.weaponItems[i].notes;
+                delete charData.equipped.weaponItems[i].properties;
+                delete charData.equipped.weaponItems[i].weight;
+
+            }
+
+            for (let i = 0; i < charData.levelSpells.length; i++){
+                for (let j = 0; j < charData.levelSpells[i].length; j++){
+                    delete charData.levelSpells[i][j].additionalDescription;
+                    delete charData.levelSpells[i][j].dataOrigin;
+                    delete charData.levelSpells[i][j].definition;
+                    delete charData.levelSpells[i][j].dataOrigin;
+                    delete charData.levelSpells[i][j].modifiers;
+                    delete charData.levelSpells[i][j].uniqueKey;
+                }
             }
 
             console.log(`--------> CharData for ${charData.name} created`);
