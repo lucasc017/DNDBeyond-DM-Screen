@@ -34,14 +34,20 @@ let spell = {
     alwaysPrepared: false,
     atHigherLevels: [],
     castOnlyAsRitual: false,
-    characterLevel: 1,
+    description: "",
     name: "",
-    usesSpellSlot: false,
     damage: {
         hasDamage: true,
         amountOfDice: 1,
         typeOfDice: 6,
         modifierAddition: 1,
         toString: "1d6+1"
+    },
+    usesSpellSlot: false,
+    prepared: true,
+    range: {
+        rangeType: "",
+        distanceMax: 0,
+        distanceMin: 0,
     }
 }
