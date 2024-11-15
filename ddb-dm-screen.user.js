@@ -560,6 +560,30 @@ var initalModules = {
             }
         }
 
+        function parseAttackString(attackString) {
+            const result = {};
+          
+            // Extract the "to hit" value using regex
+            const toHitMatch = attackString.match(/Attack:\*.*\+(\d+)/);
+            result.toHit = toHitMatch ? parseInt(toHitMatch[1]) : null;
+          
+            // Extract the range using regex
+            const rangeMatch = attackString.match(/range (\d+ ft\.)/);
+            result.range = rangeMatch ? rangeMatch[1] : null;
+          
+            // Extract the hit damage and damage type using regex
+            const damageMatch = attackString.match(/Hit:\* (\d+d\d+ \+ \d+) (\w+) damage/);
+            if (damageMatch) {
+              result.hitDamage = damageMatch[1];
+              result.damageType = damageMatch[2];
+            } else {
+              result.hitDamage = null;
+              result.damageType = null;
+            }
+          
+            return result;
+          }       
+
         function getMinCharData(state) {
             /*
                 All parts of the following return are from http://media.dndbeyond.com/character-tools/characterTools.bundle.71970e5a4989d91edc1e.min.js, they are found in functions that have: '_mapStateToProps(state)' in the name, like function CharacterManagePane_mapStateToProps(state)
@@ -569,18 +593,6 @@ var initalModules = {
             console.log("Minified Data: Processing State Info Into Minified Data");
 
             var ruleData = charf1.getRuleData(state);
-
-            function getSenseData(senses){ // finds returns the label
-                return Object.keys(senses).map(function(index) {
-                    let indexInt = parseInt(index);
-                    return {
-                        id: indexInt,
-                        key: charf2.getSenseTypeModifierKey(indexInt),
-                        name: charf2.getSenseTypeLabel(indexInt),
-                        distance: senses[indexInt]
-                    }
-                })
-            }
 
             function getSpeedData(speeds){ // finds returns the label
                 let halfSpeed = roundDown(divide(speeds[Core[cmov].WALK],2));
@@ -600,13 +612,38 @@ var initalModules = {
                 });
             }
 
+            function getConditions(conditions) {
+                if (conditions.length == 0) {
+                    return null;
+                }
+                let ans = [];
+                for (let i = 0; i < conditions.length; i++){
+                    ans.push(conditions[i].definition.name);
+                }
+                return ans;
+            }
+
+            function getMinCreatures(creatures) {
+                let ans = [];
+                for (const creature of creatures){
+                    let conditionImmunities = [];
+                    for (const conditionImmunity of creature.immunities){
+                        conditionImmunities.push(conditionImmunity.definition.name)
+                    }
+
+                    ans.push({
+                        armorClass: creature.armorClass,
+                        conditionImmunities: conditionImmunities,
+                        damageAdjustments: creature.name,
+                    });
+                }
+            }
+
             let charData = {
                 abilities: charf1.getAbilities(state), // not sure what the difference is between this and abilityLookup, seems to be one is a object, the other an array...
                 armorClass: charf1.getAcTotal(state),
-                attacks: charf1.getAttacks(state),
-                attacksPerActionInfo: charf1.getAttacksPerActionInfo(state),
-                conditions: charf1.getActiveConditions(state),
-                creatures: charf1.getCreatures(state),
+                conditions: getConditions(charf1.getActiveConditions(state)),
+                creatures: getMinCreatures(charf1.getCreatures(state)),
                 currencies: charf1.getCurrencies(state),
                 equipped: {
                     armorItems: charf1.getEquippedArmorItems(state),
@@ -766,6 +803,18 @@ var initalModules = {
 
             }
 
+            for (let i = 0; i < charData.feats.length; i++){
+                charData.feats[i].actions;
+                charData.feats[i].componentId;
+                charData.feats[i].componentTypeId;
+                charData.feats[i].definition;
+                charData.feats[i].definitionId;
+                charData.feats[i].modifiers;
+                charData.feats[i].id;
+                charData.feats[i].options;
+
+            }
+
             for (let i = 0; i < charData.levelSpells.length; i++){
                 for (let j = 0; j < charData.levelSpells[i].length; j++){
                     delete charData.levelSpells[i][j].additionalDescription;
@@ -775,6 +824,79 @@ var initalModules = {
                     delete charData.levelSpells[i][j].modifiers;
                     delete charData.levelSpells[i][j].uniqueKey;
                 }
+            }
+
+            for (let i = 0; i < charData.resistances.length; i++){
+                delete charData.resistances[i].damageAdjustments;
+
+            }
+
+            for(let i  = 0; i < charData.unequipped.armorItems.length; i++){
+                delete charData.unequipped.armorItems[i].additionalDamages;
+                delete charData.unequipped.armorItems[i].avatarUrl;
+                delete charData.unequipped.armorItems[i].containerDefinitionKey;
+                delete charData.unequipped.armorItems[i].containerEntityId;
+                delete charData.unequipped.armorItems[i].containerEntityTypeId;
+                delete charData.unequipped.armorItems[i].currency;
+                delete charData.unequipped.armorItems[i].damage;
+                delete charData.unequipped.armorItems[i].damageType;
+                delete charData.unequipped.armorItems[i].definition;
+                delete charData.unequipped.armorItems[i].definitionId;
+                delete charData.unequipped.armorItems[i].definitionKey;
+                delete charData.unequipped.armorItems[i].definitionTypeId;
+                delete charData.unequipped.armorItems[i].entityTypeId;
+                delete charData.unequipped.armorItems[i].equippedEntityId;
+                delete charData.unequipped.armorItems[i].equippedEntityTypeId;
+                delete charData.unequipped.armorItems[i].id;
+                delete charData.unequipped.armorItems[i].metaItems;
+                delete charData.unequipped.armorItems[i].notes;
+                delete charData.unequipped.armorItems[i].properties;
+                delete charData.unequipped.armorItems[i].weight;
+
+            }
+
+            for(let i  = 0; i < charData.unequipped.gearItems.length; i++){
+                delete charData.unequipped.gearItems[i].additionalDamages;
+                delete charData.unequipped.gearItems[i].avatarUrl;
+                delete charData.unequipped.gearItems[i].containerDefinitionKey;
+                delete charData.unequipped.gearItems[i].containerEntityId;
+                delete charData.unequipped.gearItems[i].containerEntityTypeId;
+                delete charData.unequipped.gearItems[i].currency;
+                delete charData.unequipped.gearItems[i].definition;
+                delete charData.unequipped.gearItems[i].definitionId;
+                delete charData.unequipped.gearItems[i].definitionKey;
+                delete charData.unequipped.gearItems[i].definitionTypeId;
+                delete charData.unequipped.gearItems[i].entityTypeId;
+                delete charData.unequipped.gearItems[i].equippedEntityId;
+                delete charData.unequipped.gearItems[i].equippedEntityTypeId;
+                delete charData.unequipped.gearItems[i].id;
+                delete charData.unequipped.gearItems[i].metaItems;
+                delete charData.unequipped.gearItems[i].notes;
+                delete charData.unequipped.gearItems[i].properties;
+                delete charData.unequipped.gearItems[i].weight;
+
+            }
+
+            for(let i  = 0; i < charData.unequipped.weaponItems.length; i++){
+                delete charData.unequipped.weaponItems[i].additionalDamages;
+                delete charData.unequipped.weaponItems[i].avatarUrl;
+                delete charData.unequipped.weaponItems[i].containerDefinitionKey;
+                delete charData.unequipped.weaponItems[i].containerEntityId;
+                delete charData.unequipped.weaponItems[i].containerEntityTypeId;
+                delete charData.unequipped.weaponItems[i].currency;
+                delete charData.unequipped.weaponItems[i].definition;
+                delete charData.unequipped.weaponItems[i].definitionId;
+                delete charData.unequipped.weaponItems[i].definitionKey;
+                delete charData.unequipped.weaponItems[i].definitionTypeId;
+                delete charData.unequipped.weaponItems[i].entityTypeId;
+                delete charData.unequipped.weaponItems[i].equippedEntityId;
+                delete charData.unequipped.weaponItems[i].equippedEntityTypeId;
+                delete charData.unequipped.weaponItems[i].id;
+                delete charData.unequipped.weaponItems[i].metaItems;
+                delete charData.unequipped.weaponItems[i].notes;
+                delete charData.unequipped.weaponItems[i].properties;
+                delete charData.unequipped.weaponItems[i].weight;
+
             }
 
             console.log(`--------> CharData for ${charData.name} created`);
@@ -1002,7 +1124,7 @@ async function getCharJSON(url) {
                 Promise.all(promises).then(()=>{
                     let charData = window.moduleExport.getMinCharData(charactersData[charId].state);
                     processJSONStream(createJSONStream(charData)).then((parsedData) => {
-                        let characterDataString = safeStringify(parsedData);
+                        let characterDataString = parsedData;
                         const blob = new Blob([characterDataString], { type: "application/json" });
                         const urlBlob = URL.createObjectURL(blob);
 
