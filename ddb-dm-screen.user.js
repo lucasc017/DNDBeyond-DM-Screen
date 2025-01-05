@@ -560,6 +560,13 @@ var initalModules = {
             }
         }
 
+        function extractAttackName(attackString) {
+            // Use regex to find the name of the attack before "Ranged Weapon Attack"
+            const nameMatch = attackString.match(/<strong>(.*?)\.<\/strong>/);
+            return nameMatch ? nameMatch[1] : null;
+        }
+          
+
         function parseAttackString(attackString) {
             const result = {};
           
@@ -627,15 +634,71 @@ var initalModules = {
                 let ans = [];
                 for (const creature of creatures){
                     let conditionImmunities = [];
-                    for (const conditionImmunity of creature.immunities){
+                    let damageImmunities = [];
+                    let damageResistances = [];
+                    let damageVulnerabilities = [];
+                    for (const conditionImmunity of creature.conditionImmunities){
                         conditionImmunities.push(conditionImmunity.definition.name)
+                    }
+                    for (const damageImmunity of creature.damageImmunities) {
+                        damageImmunities.push(damageImmunity.name);
+                    }
+                    for (const damageResistance of creature.damageResistances) {
+                        damageResistances.push(damageResistance.name);
+                    }
+                    for (const damageVulnerability of creature.damageVulnerabilities){
+                        damageVulnerabilities.push(damageVulnerability.name);
                     }
 
                     ans.push({
                         armorClass: creature.armorClass,
                         conditionImmunities: conditionImmunities,
-                        damageAdjustments: creature.name,
+                        damageImmunities: damageImmunities,
+                        damageResistances: damageResistances,
+                        damageVulnerabilities: damageVulnerabilities,
+                        hitPointInfo: creature.hitPointInfo,
+                        name: creature.name,
+                        size: creature.sizeInfo.name,
                     });
+                }
+            }
+
+            function getHealingDice(modifiers){
+                for (const modifier of modifiers){
+                    if (modifier.friendlySubtypeName === "Hit Points") {
+                        return {
+                            
+                        }
+                    }
+                }
+            }
+
+            function getSpells(carf1, state){
+                let spells = [];
+                const levelSpells = charf1.getLevelSpells(state);
+                for (const levelSpell of spells) {
+                    let spell = {
+                        activation: levelSpell.activation,
+                        alwaysPrepared: levelSpell.alwaysPrepared,
+                        atHigherLevels: [],
+                        castOnlyAsRitual: levelSpell.castOnlyAsRitual,
+                        description: levelSpell.definition.description,
+                        name: levelSpell.name,
+                        usesSpellSlot: levelSpell.usesSpellSlot,
+                        prepared: levelSpell.prepared0,
+                        range: {
+                            rangeType: "",
+                            distanceMax: 0,
+                            distanceMin: 0,
+                        },
+                        healing: {
+                            doesHealing: true,
+                            amountOfDice: 1,
+                            typeOfDice: 6,
+                            modifierAddition: ,
+                            toString: levelSpell.definition.
+                        }
+                    }
                 }
             }
 
@@ -650,15 +713,15 @@ var initalModules = {
                     weaponItems: charf1.getEquippedWeaponItems(state),
                     gearItems: charf1.getEquippedGearItems(state)
                 },
+                name: charf1.getName(state),
+                initiative: charf1.getProcessedInitiative(state), //here
                 feats: charf1.getBaseFeats(state),
                 hasInitiativeAdvantage: charf1.getHasInitiativeAdvantage(state),
                 hasMaxAttunedItems: charf1.hasMaxAttunedItems(state),
                 hasSpells: charf1.hasSpells(state),
                 hitPointInfo: charf1.getHitPointInfo(state),
                 immunities: charf1.getActiveGroupedImmunities(state),
-                initiative: charf1.getProcessedInitiative(state),
                 levelSpells: charf1.getLevelSpells(state),
-                name: charf1.getName(state),
                 passiveInsight: charf1.getPassiveInsight(state),
                 passiveInvestigation: charf1.getPassiveInvestigation(state),
                 passivePerception: charf1.getPassivePerception(state),
@@ -674,230 +737,6 @@ var initalModules = {
                 vulnerabilities: charf1.getActiveGroupedVulnerabilities(state),
                 totalClassLevel: charf1.getTotalClassLevel(state),
             };
-            
-            delete charData.node;
-            delete charData.state;
-            delete charData.type;
-            delete charData.url;
-
-            delete charData.abilities[0].entityTypeId;
-            delete charData.abilities[0].id;
-            delete charData.abilities[1].entityTypeId;
-            delete charData.abilities[1].id;
-            delete charData.abilities[2].entityTypeId;
-            delete charData.abilities[2].id;
-            delete charData.abilities[3].entityTypeId;
-            delete charData.abilities[3].id;
-            delete charData.abilities[4].entityTypeId;
-            delete charData.abilities[4].id;
-            delete charData.abilities[5].entityTypeId;
-            delete charData.abilities[5].id;
-
-            delete charData.activatables;
-
-            for(let i = 0; i < charData.attacks.length; i++){
-                delete charData.attacks[i].key;
-                delete charData.attacks[i].type;
-                delete charData.attacks[i].data.additionalDamages;
-                delete charData.attacks[i].data.definition;
-                delete charData.attacks[i].data.metaItems;
-                delete charData.attacks[i].data.modifiers;
-                delete charData.attacks[i].data.originalContract;
-                delete charData.attacks[i].data.properties;
-                delete charData.attacks[i].data.spells;
-
-            }
-
-            for(let i = 0; i < charData.creatures; i++){
-                delete charData.creatures[i].alignmentId;
-                delete charData.creatures[i].challengeInfo;
-                delete charData.creatures[i].definition;
-                delete charData.creatures[i].description;
-                delete charData.creatures[i].entityTypeId;
-                delete charData.creatures[i].environmentTags;
-                delete charData.creatures[i].flags;
-                delete charData.creatures[i].groupId;
-                charData.groupinfoName = charData.creatures[i].name;
-                delete charData.creatures[i].groupInfo;
-                delete charData.creatures[i].id;
-                delete charData.creatures[i].infusion;
-                delete charData.creatures[i].movementIds;
-                delete charData.creatures[i].notes;
-                delete charData.creatures[i].savingThrowLookup;
-                delete charData.creatures[i].savingThrows;
-                delete charData.creatures[i].sizeId;
-                delete charData.creatures[i].sizeInfo;
-                delete charData.creatures[i].entityTypeId;
-                delete charData.creatures[i].skillLookup;
-                delete charData.creatures[i].subTypeTags;
-                delete charData.creatures[i].subTypes;
-                delete charData.creatures[i].typeId;
-
-            }
-
-            for(let i  = 0; i < charData.equipped.armorItems.length; i++){
-                delete charData.equipped.armorItems[i].additionalDamages;
-                delete charData.equipped.armorItems[i].avatarUrl;
-                delete charData.equipped.armorItems[i].containerDefinitionKey;
-                delete charData.equipped.armorItems[i].containerEntityId;
-                delete charData.equipped.armorItems[i].containerEntityTypeId;
-                delete charData.equipped.armorItems[i].currency;
-                delete charData.equipped.armorItems[i].damage;
-                delete charData.equipped.armorItems[i].damageType;
-                delete charData.equipped.armorItems[i].definition;
-                delete charData.equipped.armorItems[i].definitionId;
-                delete charData.equipped.armorItems[i].definitionKey;
-                delete charData.equipped.armorItems[i].definitionTypeId;
-                delete charData.equipped.armorItems[i].entityTypeId;
-                delete charData.equipped.armorItems[i].equippedEntityId;
-                delete charData.equipped.armorItems[i].equippedEntityTypeId;
-                delete charData.equipped.armorItems[i].id;
-                delete charData.equipped.armorItems[i].metaItems;
-                delete charData.equipped.armorItems[i].notes;
-                delete charData.equipped.armorItems[i].properties;
-                delete charData.equipped.armorItems[i].weight;
-
-            }
-
-            for(let i  = 0; i < charData.equipped.gearItems.length; i++){
-                delete charData.equipped.gearItems[i].additionalDamages;
-                delete charData.equipped.gearItems[i].avatarUrl;
-                delete charData.equipped.gearItems[i].containerDefinitionKey;
-                delete charData.equipped.gearItems[i].containerEntityId;
-                delete charData.equipped.gearItems[i].containerEntityTypeId;
-                delete charData.equipped.gearItems[i].currency;
-                delete charData.equipped.gearItems[i].definition;
-                delete charData.equipped.gearItems[i].definitionId;
-                delete charData.equipped.gearItems[i].definitionKey;
-                delete charData.equipped.gearItems[i].definitionTypeId;
-                delete charData.equipped.gearItems[i].entityTypeId;
-                delete charData.equipped.gearItems[i].equippedEntityId;
-                delete charData.equipped.gearItems[i].equippedEntityTypeId;
-                delete charData.equipped.gearItems[i].id;
-                delete charData.equipped.gearItems[i].metaItems;
-                delete charData.equipped.gearItems[i].notes;
-                delete charData.equipped.gearItems[i].properties;
-                delete charData.equipped.gearItems[i].weight;
-
-            }
-
-            for(let i  = 0; i < charData.equipped.weaponItems.length; i++){
-                delete charData.equipped.weaponItems[i].additionalDamages;
-                delete charData.equipped.weaponItems[i].avatarUrl;
-                delete charData.equipped.weaponItems[i].containerDefinitionKey;
-                delete charData.equipped.weaponItems[i].containerEntityId;
-                delete charData.equipped.weaponItems[i].containerEntityTypeId;
-                delete charData.equipped.weaponItems[i].currency;
-                delete charData.equipped.weaponItems[i].definition;
-                delete charData.equipped.weaponItems[i].definitionId;
-                delete charData.equipped.weaponItems[i].definitionKey;
-                delete charData.equipped.weaponItems[i].definitionTypeId;
-                delete charData.equipped.weaponItems[i].entityTypeId;
-                delete charData.equipped.weaponItems[i].equippedEntityId;
-                delete charData.equipped.weaponItems[i].equippedEntityTypeId;
-                delete charData.equipped.weaponItems[i].id;
-                delete charData.equipped.weaponItems[i].metaItems;
-                delete charData.equipped.weaponItems[i].notes;
-                delete charData.equipped.weaponItems[i].properties;
-                delete charData.equipped.weaponItems[i].weight;
-
-            }
-
-            for (let i = 0; i < charData.feats.length; i++){
-                charData.feats[i].actions;
-                charData.feats[i].componentId;
-                charData.feats[i].componentTypeId;
-                charData.feats[i].definition;
-                charData.feats[i].definitionId;
-                charData.feats[i].modifiers;
-                charData.feats[i].id;
-                charData.feats[i].options;
-
-            }
-
-            for (let i = 0; i < charData.levelSpells.length; i++){
-                for (let j = 0; j < charData.levelSpells[i].length; j++){
-                    delete charData.levelSpells[i][j].additionalDescription;
-                    delete charData.levelSpells[i][j].dataOrigin;
-                    delete charData.levelSpells[i][j].definition;
-                    delete charData.levelSpells[i][j].dataOrigin;
-                    delete charData.levelSpells[i][j].modifiers;
-                    delete charData.levelSpells[i][j].uniqueKey;
-                }
-            }
-
-            for (let i = 0; i < charData.resistances.length; i++){
-                delete charData.resistances[i].damageAdjustments;
-
-            }
-
-            for(let i  = 0; i < charData.unequipped.armorItems.length; i++){
-                delete charData.unequipped.armorItems[i].additionalDamages;
-                delete charData.unequipped.armorItems[i].avatarUrl;
-                delete charData.unequipped.armorItems[i].containerDefinitionKey;
-                delete charData.unequipped.armorItems[i].containerEntityId;
-                delete charData.unequipped.armorItems[i].containerEntityTypeId;
-                delete charData.unequipped.armorItems[i].currency;
-                delete charData.unequipped.armorItems[i].damage;
-                delete charData.unequipped.armorItems[i].damageType;
-                delete charData.unequipped.armorItems[i].definition;
-                delete charData.unequipped.armorItems[i].definitionId;
-                delete charData.unequipped.armorItems[i].definitionKey;
-                delete charData.unequipped.armorItems[i].definitionTypeId;
-                delete charData.unequipped.armorItems[i].entityTypeId;
-                delete charData.unequipped.armorItems[i].equippedEntityId;
-                delete charData.unequipped.armorItems[i].equippedEntityTypeId;
-                delete charData.unequipped.armorItems[i].id;
-                delete charData.unequipped.armorItems[i].metaItems;
-                delete charData.unequipped.armorItems[i].notes;
-                delete charData.unequipped.armorItems[i].properties;
-                delete charData.unequipped.armorItems[i].weight;
-
-            }
-
-            for(let i  = 0; i < charData.unequipped.gearItems.length; i++){
-                delete charData.unequipped.gearItems[i].additionalDamages;
-                delete charData.unequipped.gearItems[i].avatarUrl;
-                delete charData.unequipped.gearItems[i].containerDefinitionKey;
-                delete charData.unequipped.gearItems[i].containerEntityId;
-                delete charData.unequipped.gearItems[i].containerEntityTypeId;
-                delete charData.unequipped.gearItems[i].currency;
-                delete charData.unequipped.gearItems[i].definition;
-                delete charData.unequipped.gearItems[i].definitionId;
-                delete charData.unequipped.gearItems[i].definitionKey;
-                delete charData.unequipped.gearItems[i].definitionTypeId;
-                delete charData.unequipped.gearItems[i].entityTypeId;
-                delete charData.unequipped.gearItems[i].equippedEntityId;
-                delete charData.unequipped.gearItems[i].equippedEntityTypeId;
-                delete charData.unequipped.gearItems[i].id;
-                delete charData.unequipped.gearItems[i].metaItems;
-                delete charData.unequipped.gearItems[i].notes;
-                delete charData.unequipped.gearItems[i].properties;
-                delete charData.unequipped.gearItems[i].weight;
-
-            }
-
-            for(let i  = 0; i < charData.unequipped.weaponItems.length; i++){
-                delete charData.unequipped.weaponItems[i].additionalDamages;
-                delete charData.unequipped.weaponItems[i].avatarUrl;
-                delete charData.unequipped.weaponItems[i].containerDefinitionKey;
-                delete charData.unequipped.weaponItems[i].containerEntityId;
-                delete charData.unequipped.weaponItems[i].containerEntityTypeId;
-                delete charData.unequipped.weaponItems[i].currency;
-                delete charData.unequipped.weaponItems[i].definition;
-                delete charData.unequipped.weaponItems[i].definitionId;
-                delete charData.unequipped.weaponItems[i].definitionKey;
-                delete charData.unequipped.weaponItems[i].definitionTypeId;
-                delete charData.unequipped.weaponItems[i].entityTypeId;
-                delete charData.unequipped.weaponItems[i].equippedEntityId;
-                delete charData.unequipped.weaponItems[i].equippedEntityTypeId;
-                delete charData.unequipped.weaponItems[i].id;
-                delete charData.unequipped.weaponItems[i].metaItems;
-                delete charData.unequipped.weaponItems[i].notes;
-                delete charData.unequipped.weaponItems[i].properties;
-                delete charData.unequipped.weaponItems[i].weight;
-
-            }
 
             console.log(`--------> CharData for ${charData.name} created`);
             

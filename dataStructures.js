@@ -1,15 +1,15 @@
 let optimalCharData = {
-    armorClass: 10,
     abilities,
+    armorClass: 10,
     conditions: [],
     creatures: [],
     currencies: {},
     name: "",
     initiative: '',
     spells: [],
-    weapon_attacks: {
-        ranged: [],
-        Melee: []
+    attacks: {
+        main: [],
+        bonus: []
     },
     hitPointInfo:{},
     items: {
@@ -28,13 +28,19 @@ let optimalCharData = {
     speeds: {},
 }
 
+let attack = {
+    name: "",
+    subType: string,
+    
+}
+
 let creatures = {
     armorClass: 0,
+    attacks: [],
     conditionImmunities: [],
     damageImmunities: [],
     damageResistances: [],
     damageVulnerabilities: [],
-    description: "",
     hitPointInfo: {},
     name: "",
     size: 0,
@@ -66,6 +72,13 @@ let spell = {
     name: "",
     damage: {
         hasDamage: true,
+        amountOfDice: 1,
+        typeOfDice: 6,
+        modifierAddition: 1,
+        toString: "1d6+1"
+    },
+    heals: {
+        doesHealing: true,
         amountOfDice: 1,
         typeOfDice: 6,
         modifierAddition: 1,
