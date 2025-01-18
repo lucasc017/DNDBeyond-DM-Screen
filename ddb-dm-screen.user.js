@@ -663,42 +663,162 @@ var initalModules = {
                 }
             }
 
-            function getHealingDice(modifiers){
+            function getDamageDice(modifiers, spellCastingModifier){
+                let dice = undefined;
                 for (const modifier of modifiers){
-                    if (modifier.friendlySubtypeName === "Hit Points") {
-                        return {
-                            
+                    if (modifier.type === "damage") {
+                        if (modifier.usePrimaryStat){
+                            dice = {
+                                amountOfDice: modifier.die.diceCount,
+                                typeOfDice: modifier.die.diceValue,
+                                modifierAddition: spellCastingModifier,
+                            }
+                        } else {
+                            dice = {
+                                amountOfDice: modifier.die.diceCount,
+                                typeOfDice: modifier.die.diceValue,
+                                modifierAddition: 0,
+                            }
                         }
+                        
+                    }
+                }
+                return dice;
+            }
+
+            function getHealingDice(modifiers, spellCastingModifier){
+                let dice = undefined;
+                for (const modifier of modifiers){
+                    if (modifier.subType === "hit-points") {
+                        if (modifier.usePrimaryStat){
+                            dice = {
+                                amountOfDice: modifier.die.diceCount,
+                                typeOfDice: modifier.die.diceValue,
+                                modifierAddition: spellCastingModifier,
+                            }
+                        } else {
+                            dice = {
+                                amountOfDice: modifier.die.diceCount,
+                                typeOfDice: modifier.die.diceValue,
+                                modifierAddition: 0,
+                            }
+                        }
+                        
+                    }
+                }
+                return dice;
+            }
+            function createMinifiedSpell(spell){
+                const healingDice = getHealingDice(spell.definition.modifiers, spell.spellcastingModifier);
+                const damageDice = getDamageDice(spell.definition.modifiers, spell.spellcastingModifier);
+
+                return {
+                    activation: spell.activation,
+                    alwaysPrepared: spell.alwaysPrepared,
+                    atHigherLevels: [],
+                    castOnlyAsRitual: spell.castOnlyAsRitual,
+                    damage: damageDice,
+                    description: spell.definition.description,
+                    healing: healingDice,
+                    name: spell.name,
+                    usesSpellSlot: spell.usesSpellSlot,
+                    prepared: spell.prepared0,
+                    range: spell.range,
+                };
+            }
+
+            function getLevelSpells(charf1, state) {
+                let spells = [];
+                const allLevelSpells = charf1.getLevelSpells(state);
+                for (const spellsOfLevel of allLevelSpells){
+                    for (const levelSpell of spellsOfLevel) {
+                        spells.push(createMinifiedSpell(levelSpell));
+                    }
+                }
+                return spells;
+            }
+
+            function getFeatSpells(charf1, state) {
+                let spells =[];
+                const feats = charf1.getBaseFeats(state);
+                for (const feat of feats) {
+                    const spells = feat.spells;
+                    for (const featSpell of spells) {
+                        spells.push(createMinifiedSpell(featSpell));
                     }
                 }
             }
 
-            function getSpells(carf1, state){
+            function getSpells(charf1, state){
                 let spells = [];
-                const levelSpells = charf1.getLevelSpells(state);
-                for (const levelSpell of spells) {
-                    let spell = {
-                        activation: levelSpell.activation,
-                        alwaysPrepared: levelSpell.alwaysPrepared,
-                        atHigherLevels: [],
-                        castOnlyAsRitual: levelSpell.castOnlyAsRitual,
-                        description: levelSpell.definition.description,
-                        name: levelSpell.name,
-                        usesSpellSlot: levelSpell.usesSpellSlot,
-                        prepared: levelSpell.prepared0,
-                        range: {
-                            rangeType: "",
-                            distanceMax: 0,
-                            distanceMin: 0,
+                spells.push(getLevelSpells(charf1, state));
+                spells.push(getFeatSpells(charf1, state));
+                return spells;
+            }
+
+            function getItemSpells(spells){
+                let ans = [];
+                for (const armorSpell of spells) {
+                    ans.push(createMinifiedSpell(armorSpell));
+                }
+                return ans;
+            }
+
+            function getMinifiedArmorItems(armorItems, isEquipped) {
+                let minifiedArmorItems = [];
+
+                for (const armorItem of armorItems) {
+                    minifiedArmorItems.push({
+                        armorClass: armorItem.armorClass,
+                        baseItemType: armorItem.baseItemType,
+                        canAttune: armorItem.canAttune,
+                        canEquip: armorItem.canEquip,
+                        cost: armorItem.cost,
+                        description: armorItem.definition.description,
+                        equipped: isEquipped,
+                        infusion: armorItem.infusion,
+                        infusionActions: armorItem.infusionActions,
+                        isAttuned: armorItem.isAttuned,
+                        isMagic: armorItem.isMagic,
+                        name: armorItem.name,
+                        spells: getItemSpells(armorItem.spells),
+                        type: armorItem.type,
+                    });
+                }
+            }
+
+            function getMinifiedWeapons(weapons, isEquipped){
+                let minifiedWeaponItems = [];
+                for (const weapon of weapons){
+                    minifiedWeaponItems.push({
+                        baseItemType: weapon.baseItemType,
+                        canAttune: weapon.canAttune,
+                        canEquip: weapon.canEquip,
+                        categoryInfo: weapon.categoryInfo,
+                        cost: weapon.cost,
+                        damage: {
+                            diceCount: weapon.damage.diceCount,
+                            diceValue: weapon.damage.diceValue,
+                            fixedValue: weapon.damage.fixedValue,
                         },
-                        healing: {
-                            doesHealing: true,
-                            amountOfDice: 1,
-                            typeOfDice: 6,
-                            modifierAddition: ,
-                            toString: levelSpell.definition.
-                        }
-                    }
+                        damageType: weapon.damageType,
+                        description: weapon.definition.description,
+                        equipped: isEquipped,
+                        infusion: weapon.infusion,
+                        infusionActions: weapon.infusionActions,
+                        isAttuned: weapon.isAttuned,
+                        isAdamantine: weapon.isAdamantine,
+                        isAttuned: weapon.isAttuned,
+                        isCustom: weapon.isCustom,
+                        isCustomized: weapon.isCustomized,
+                        isSilvered: weapon.isSilvered,
+                        proficiency: weapon.proficiency,
+                        isMagic: weapon.isMagic,
+                        name: weapon.name,
+                        spells: getItemSpells(weapon.spells),
+                        versatileDamage: weapon.versatileDamage,
+                        type: weapon.type,
+                    })
                 }
             }
 
@@ -708,20 +828,26 @@ var initalModules = {
                 conditions: getConditions(charf1.getActiveConditions(state)),
                 creatures: getMinCreatures(charf1.getCreatures(state)),
                 currencies: charf1.getCurrencies(state),
-                equipped: {
-                    armorItems: charf1.getEquippedArmorItems(state),
-                    weaponItems: charf1.getEquippedWeaponItems(state),
-                    gearItems: charf1.getEquippedGearItems(state)
-                },
                 name: charf1.getName(state),
-                initiative: charf1.getProcessedInitiative(state), //here
-                feats: charf1.getBaseFeats(state),
+                initiative: charf1.getProcessedInitiative(state),
                 hasInitiativeAdvantage: charf1.getHasInitiativeAdvantage(state),
                 hasMaxAttunedItems: charf1.hasMaxAttunedItems(state),
                 hasSpells: charf1.hasSpells(state),
                 hitPointInfo: charf1.getHitPointInfo(state),
                 immunities: charf1.getActiveGroupedImmunities(state),
-                levelSpells: charf1.getLevelSpells(state),
+                items: {
+                    equipped: {
+                        armorItems: getMinifiedArmorItems(charf1.getEquippedArmorItems(state), true),
+                        weaponItems: getMinifiedWeapons(charf1.getEquippedWeaponItems(state), true),
+                        gearItems: charf1.getEquippedGearItems(state)
+                    },
+                    unequipped: {
+                        armorItems: getMinifiedArmorItems(charf1.getUnequippedArmorItems(state), false),
+                        weaponItems: getMinifiedWeapons(charf1.getUnequippedWeaponItems(state), false),
+                        gearItems: charf1.getUnequippedGearItems(state)
+                    },
+                },
+                spells: getSpells(charf1, state), //here
                 passiveInsight: charf1.getPassiveInsight(state),
                 passiveInvestigation: charf1.getPassiveInvestigation(state),
                 passivePerception: charf1.getPassivePerception(state),
@@ -729,16 +855,11 @@ var initalModules = {
                 resistances: charf1.getActiveGroupedResistances(state),
                 speeds: getSpeedData(charf1.getCurrentWeightSpeed(state)),
                 traits: charf1.getCharacterTraits(state),
-                unequipped: {
-                    armorItems: charf1.getUnequippedArmorItems(state),
-                    weaponItems: charf1.getUnequippedWeaponItems(state),
-                    gearItems: charf1.getUnequippedGearItems(state)
-                },
                 vulnerabilities: charf1.getActiveGroupedVulnerabilities(state),
                 totalClassLevel: charf1.getTotalClassLevel(state),
             };
 
-            console.log(`--------> CharData for ${charData.name} created`);
+            console.log(`--------> Minified CharData for ${charData.name} created`);
             
             return charData;
 

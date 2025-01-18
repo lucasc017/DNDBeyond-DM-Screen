@@ -71,18 +71,14 @@ let spell = {
     description: "",
     name: "",
     damage: {
-        hasDamage: true,
         amountOfDice: 1,
         typeOfDice: 6,
         modifierAddition: 1,
-        toString: "1d6+1"
     },
     heals: {
-        doesHealing: true,
         amountOfDice: 1,
         typeOfDice: 6,
         modifierAddition: 1,
-        toString: "1d6+1"
     },
     usesSpellSlot: false,
     prepared: true,
@@ -151,8 +147,6 @@ let weaponItem = {
 
 let damage = {
     diceCount: 1,
-    diceMultiplier: 0,
-    diceString: "",
     diceValue: 4,
     fixedValue: 3,
 }
